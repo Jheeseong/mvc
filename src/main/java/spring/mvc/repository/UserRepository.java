@@ -1,6 +1,7 @@
-package spring.mvc.domain;
+package spring.mvc.repository;
 
 import org.springframework.stereotype.Repository;
+import spring.mvc.domain.User;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
