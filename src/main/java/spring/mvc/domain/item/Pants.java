@@ -9,7 +9,7 @@ import javax.persistence.Entity;
 @Entity
 @Getter @Setter
 @DiscriminatorValue("Pants")
-public class Pants {
+public class Pants extends Item {
 
     private String size;
     private String kinds;

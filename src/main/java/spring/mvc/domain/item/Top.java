@@ -10,7 +10,7 @@ import javax.persistence.Entity;
 @DiscriminatorValue("Top")
 @Getter
 @Setter
-public class Top {
+public class Top extends Item {
 
     private String size;
     private String color;

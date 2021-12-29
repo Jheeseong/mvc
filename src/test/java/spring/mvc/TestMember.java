@@ -1,40 +1,56 @@
 package spring.mvc;
 
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
+
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import spring.mvc.domain.User;
 import spring.mvc.repository.UserRepository;
+import spring.mvc.service.UserService;
 
-import javax.transaction.Transactional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Transactional
 public class TestMember {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    UserService userService;
+
     @Test
-    @Transactional
-    @Rollback(false)
-    public void testMember() {
-        User user = new User();
-        user.setUsername("memberA");
+    public void SignIn() throws Exception {
+            //given
+            User user = new User();
+            user.setUsername("kim");
 
-        Long savedId = userRepository.save(user);
+            //when
+            Long saveId = userService.join(user);
 
-        User findUser = userRepository.find(savedId);
+            //then
+            assertEquals(user,userRepository.findOne(saveId));
+        }
 
-        assertThat(findUser.getId()).isEqualTo(user.getId());
+    @Test(expected = IllegalStateException.class)
+    public void duplicateMember() throws Exception {
+        //given
+        User user1 = new User();
+        user1.setUsername("kim");
 
-        assertThat(findUser.getUsername()).isEqualTo(user.getUsername());
-
-        assertThat(findUser).isEqualTo(user);
-
+        User user2 = new User();
+        user2.setUsername("kim");
+        //when
+        userService.join(user1);
+        userService.join(user2);
+        //then
+        fail("예외가 발생해야 한다.");
     }
 }
+
