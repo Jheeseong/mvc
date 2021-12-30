@@ -1,4 +1,12 @@
 # mvc
+# v1.02 12/30
+
+Item의 repository, service 클래스 추가
+
+비지니스 로직 addStock와 removeStock을 Item 도메인에 추가
+
+Stock 갯수 파악 후 부족 시 예외 기능 추가
+
 # v1.01 12/29
 
 User의 repository, service 클래스 추가 
