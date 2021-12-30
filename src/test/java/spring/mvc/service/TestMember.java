@@ -1,4 +1,4 @@
-package spring.mvc;
+package spring.mvc.service;
 
 
 import org.junit.Test;
