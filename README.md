@@ -1,4 +1,9 @@
 # mvc
+# v1.04 12/31
+
+Order Search 기능 및 homeController 클래스 추가
+
+OrderRepository에 JPQL을 통해 검색 조건을 통한 쿼리 검색 코드 추가(추후 Querydsl 추가 예정)
 # v1.03 12/30
 
 Order의 Repository, service 클래스 추가
