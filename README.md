@@ -1,6 +1,6 @@
 # mvc
 
-# v.06 1/2
+# v1.06 1/2
 
 TopForm, ItemController 클래스 추가
 
