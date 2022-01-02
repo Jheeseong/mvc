@@ -1,5 +1,12 @@
 # mvc
 
+# v.06 1/2
+
+TopForm, ItemController 클래스 추가
+
+수정 시 /items/{itemId}/edit URL을 GET 방식으로 요청
+
+
 # v1.05 1/1
 
 UserForm, UserController 클래스 추가
