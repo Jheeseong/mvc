@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: header">
+    <title>Hello</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<div class="container">
+    <div th:replace="fragments/bodyHeader :: bodyHeader" />
+    <div class="jumbotron">
+        <h1 class="border-bottom">HS SHOP</h1>
+        <p class="lead">회원 기능</p>
+        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+            <div class="col d-flex align-items-start">
+            <div>
+                <h3>회원 등록</h3>
+                <p>회원을 등록합니다.</p>
+                <a href="#" class="btn btn-primary">
+                    Primary button
+                </a>
+            </div>
+        </div>
+            <div class="col d-flex align-items-start">
+            <div>
+                <h3>회원 목록</h3>
+                <p>등록한 회원 목록을 확인합니다.</p>
+                <a href="#" class="btn btn-primary">
+                    Primary button
+                </a>
+            </div>
+        </div>
+        </div>
+        <p class="lead">상품 기능</p>
+        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+            <div class="col d-flex align-items-start">
+            <div>
+                <h3>상품 등록</h3>
+                <p>상품을 등록합니다.</p>
+                <a href="#" class="btn btn-primary">
+                    Primary button
+                </a>
+            </div>
+        </div>
+            <div class="col d-flex align-items-start">
+                <div>
+                    <h3>상품 목록</h3>
+                    <p>등록한 상품 목록을 확인합니다.</p>
+                    <a href="#" class="btn btn-primary">
+                        Primary button
+                    </a>
+                </div>
+            </div>
+        </div>
+        <p class="lead">주문 기능</p>
+        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+            <div class="col d-flex align-items-start">
+                <div>
+                    <h3>삼품 주문</h3>
+                    <p>상품을 주문합니다.</p>
+                    <a href="#" class="btn btn-primary">
+                        Primary button
+                    </a>
+                </div>
+            </div>
+            <div class="col d-flex align-items-start">
+                <div>
+                    <h3>주문 내역</h3>
+                    <p>주문 내역을 확인합니다.</p>
+                    <a href="#" class="btn btn-primary">
+                        Primary button
+                    </a>
+                </div>
+            </div>
+        </div>
+
+</div>
+<div th:replace="fragments/footer :: footer" />
+</div> <!-- /container -->
+</body>
+</html>

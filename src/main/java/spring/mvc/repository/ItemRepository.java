@@ -2,6 +2,7 @@ package spring.mvc.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import spring.mvc.domain.item.Item;
 
 import javax.persistence.EntityManager;

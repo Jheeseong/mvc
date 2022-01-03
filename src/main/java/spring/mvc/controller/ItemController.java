@@ -69,15 +69,17 @@ public class ItemController {
     @PostMapping(value = "/items/{itemId}/edit")
     public String updateItem(@ModelAttribute("form") TopForm form) {
 
-        Top top = new Top();
-        top.setId(form.getId());
-        top.setName(form.getName());
-        top.setPrice(form.getPrice());
-        top.setStockQuantity(form.getStockQuantity());
-        top.setColor(form.getColor());
-        top.setSize(form.getSize());
-
-        itemService.saveItem(top);
+        itemService.updateItem(form.getId(), form.getName(), form.getPrice(), form.getPrice());
         return "redirect:/items";
+//        Top top = new Top();
+//        top.setId(form.getId());
+//        top.setName(form.getName());
+//        top.setPrice(form.getPrice());
+//        top.setStockQuantity(form.getStockQuantity());
+//        top.setColor(form.getColor());
+//        top.setSize(form.getSize());
+//
+//        itemService.saveItem(top);
+
     }
 }
