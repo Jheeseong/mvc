@@ -10,6 +10,8 @@ import spring.mvc.repository.ItemRepository;
 import spring.mvc.repository.OrderRepository;
 import spring.mvc.repository.UserRepository;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,5 +44,10 @@ public class OrderService {
         Order order = orderRepository.findOne(orderId);
 
         order.cancel();
+    }
+
+    //검색
+    public List<Order> findOrders(OrderSearch orderSearch) {
+        return orderRepository.findAll(orderSearch);
     }
 }
