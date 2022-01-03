@@ -1,5 +1,52 @@
 # mvc
 
+# v1.07 1/3
+
+변경 감지와 병합(merge)
+
+- 준영속 엔티티  
+영속성 컨텍스트가 관리하지 않는 엔티티  
+여기서 수정을 시도하는 Book 객체는 이미 DB에 한번 저장되어 식별자가 존재  
+기존 식별자를 가지고 있다면 준영속 엔티티
+
+- 준영속 엔티티 수정 방법  
+변경 감지 기능 사용  
+병합(merge) 사용
+
+변경 감지 기능 사용
+
+    @Transactional
+    void update(Item itemParam) { //itemParam: 파라미터로 넘어온 준영속 엔티티
+        Item findItem = em.find(Item.class, itemParam.getId()); //갘은 엔티티 조회
+        
+        findItem.setPrice(ItemParam.getPrice()); //데이터 수정
+    }
+    
+트렌잭션 안에서 엔티티를 다시 조회,변경할 값 선택 -> 트랜잭션 커밋 시점에 변경 감지(Dirty checking) -> 데이터베이스에 UPDATE SQL 실행
+
+병합 사용
+
+    @Transactional
+    void update(Item itemParam) { //itemParam: 파라미터로 넘어온 준영속 엔티티
+        item mergeItem = em.merge(item);
+    }
+
+준영속 엔티티의 식별자 값으로 영속 엔티티 조회 -> 영속 엔티티 값을 준영속 엔티티의 값으로 모두 교체(member 엔티티의 모든 값을 mergeMember에 집어 넣음) -> 트랜젝션 커밋 시점에 변경 감지 -> DB에 UPDATE SQL 실행  
+
+변경 감지 기능은 원하는 속성만 선택하여 변경 가능하지만, 병합 사용 시 모든 속성이 변경  
+-> 병합(merge) 사용 시 값이 없으면 null로 업데이트하는 위험이 존재
+
+엔티티를 변결 할 떄 변경 감지 사용을 권장  
+컨트롤러에서 엔티티 생성X  
+트랜잭션이 있는 서비스 계층에 id와 데이터를 명확하게 전달  
+트랜잭션이 있는 서비스 계층에서 영속 상태의 엔티티 조회 후 엔티티 데이터를 직접 변경  
+
+# v1.06 1/2
+
+TopForm, ItemController 클래스 추가
+
+수정 시 /items/{itemId}/edit URL을 GET 방식으로 요청  
+
 # v1.05 1/1
 
 UserForm, UserController 클래스 추가
