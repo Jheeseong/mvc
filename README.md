@@ -1,5 +1,49 @@
 # mvc
 
+# v1.08 1/4
+
+http 관련 코드
+
+- Lombok의 Slf4j  
+Slf4j는 log를 사용할 수 있게 해주는 애노테이션  
+log는 system.out.println() 보다 IO리소스 사용이 적어 메모리 관리에 효율적  
+log.info를 통해 출력이 가능  
+    
+      @Slf4j
+      ...
+      log.info("home Controller");
+    
+- @valid  
+validation을 한 객체 내 @NotEmpty, NotNull 등을 체크하여 validation 한다.  
+
+      public String create(@Valid MemberForm form)
+
+- BindingResult
+@Valid 와 BindingResult가 있을 시 오류가 담겨 다음 코드를 진행해준다.
+
+      public String create(@Valid MemberForm form, BindingResult result) {
+          if (result.hasErrors()){
+              return "members/createMemberForm";
+          }
+          ...
+
+- http Mapping
+
+http Method | 동작 | URL 형태
+---- | ---- | ----
+GET | 조회(select * read) | /user/{id}
+POST | 생성(create) | /user
+PUT / PATCH | 수정(update) * create | /user
+DELETE | 삭제(delete) | /user/{1}
+
+@GetMapping 은 데이터를 가져올 떄 사용  
+@PostMapping 은 데이터를 보내줄 떄(게시,생성) 사용
+@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 생신하는 HTTP 메서드)
+@PatchMapping 은 데이터 수정할 떄 사용(수정하는 영역만 갱신하는 HTTP 메서드)
+
+
+
+
 # v1.07 1/3
 
 변경 감지와 병합(merge)
