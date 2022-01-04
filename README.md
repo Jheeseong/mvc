@@ -37,9 +37,9 @@ PUT / PATCH | 수정(update) * create | /user
 DELETE | 삭제(delete) | /user/{1}
 
 @GetMapping 은 데이터를 가져올 떄 사용  
-@PostMapping 은 데이터를 보내줄 떄(게시,생성) 사용
-@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 생신하는 HTTP 메서드)
-@PatchMapping 은 데이터 수정할 떄 사용(수정하는 영역만 갱신하는 HTTP 메서드)
+@PostMapping 은 데이터를 보내줄 떄(게시,생성) 사용  
+@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 생신하는 HTTP 메서드)  
+@PatchMapping 은 데이터 수정할 떄 사용(수정하는 영역만 갱신하는 HTTP 메서드)  
 
 
 
