@@ -1,5 +1,78 @@
 # mvc
 
+# v1.09 1/5
+
+### MVC
+
+MVC : Model,View,Controller로 구성된 디자인 패턴
+
+Controller   
+
+    @Controller
+    public class BasicController {
+    
+    @GetMapping("basic-mvc")
+    public String basicMvc(Model model) {
+    ...
+    }
+    return "basic-template";
+    
+View
+
+    <html xmlns:th="http://www.thymeleaf.org">
+    <body>
+    <p th:text="'hello ' + ${name}">hello! empty</p>
+    </body></html>
+    
+### API
+
+@ResponseBody 문자 반환
+
+@ResponseBody를 사용하면 viewResoler을 사용X  
+대신 HTTP의 BODY에 문자 내용을 직접 반환
+
+    @Controller
+    public class BasicController {
+     @GetMapping("basic-string")
+     @ResponseBody
+     public String basicString(@RequestParam("name") String name) {
+     return "hello " + name;
+       }
+     }
+     
+@ResponseBody 객체 반환
+
+@ResponseBody를 사용하고 객체가 반환되면 객체가 JSON으로 변환
+
+    @Controller
+    public class BasicController {
+     @GetMapping("basic-api")
+     @ResponseBody
+     public Basic basicApi(@RequestParam("name") String name) {
+     Basic basic = new Basic();
+     basic.setName(name);
+     return basic;
+     }
+     static class Basic {
+     private String name;
+     public String getName() {
+     return name;
+     }
+     public void setName(String name) {
+     this.name = name;
+       }
+     }
+    }
+    
+### 일반적 웹 애플리케이션 계층 구조
+
+![app계층](https://user-images.githubusercontent.com/96407257/148177104-10b9b9eb-534c-4b78-a755-43dfc98d0231.JPG)  
+
+컨트롤러 : 웹 MVC의 컨트롤러 역할  
+서비스 : 핵심 비지니스 로직 구현  
+리포지토리 :  데이터베이스에 접근, 도메인 객체를 DB에 저장하고 관리  
+도메인 : 비지니스 도메인 객체
+
 # v1.08 1/4
 
 http 관련 코드
