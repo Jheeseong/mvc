@@ -1,5 +1,63 @@
 # mvc
 
+# v1.10 1/13
+## API 개발 기본
+### 회원 등록 API
+
+#### 엔티티를 RequestBody에 직접 매핑
+
+    @RestController // JSON으로 변환
+    @RequiredArgsConstructor
+    public class ApiMemberController {
+
+        private final UserService userService;
+
+        @PostMapping("/api/v1/members")
+        public UserResponse saveUserV1(@RequestBody @Valid User user) {
+        ...
+        return new UserResponse(id,name);
+        
+    @Data
+    static class UserResponse {
+        private Long id;
+        private String name;
+
+        public UserResponse(Long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+- @RestController : JSON으로 변환시켜주는 어노테이션
+- @RequsetBody : API통신을 통해 JSON으로 온 바디를 매핑
+- 만약 엔티티에 로직이 추가될 경우(API 검증 로직, @NotEmpty 등) 엔티티가 변하게 되고 API 스펙도 변함  
+-> API 요청 스펙에 맞춰 별도의 DTO를 파라미터로 받으며 해결!!
+
+####  DTO를 RequestBody에 매핑
+    
+    @PostMapping("/api/v2/members")
+    public UserResponse saveUserV2(@RequestBody @Valid UserDto dto) {
+
+        User user = new User();
+        user.setUsername(dto.getName());
+
+        Long id = userService.join(user);
+        String name = dto.getName();
+        return new UserResponse(id,name);
+    }
+
+    @Data
+    static class UserDto{
+        private Long id;
+        private String name;
+    }
+    
+- UserDto를 User엔티티 대신 RequestBody에 매핑
+- 엔티티와 프레젠테이션 계층을 위한 로직을 구분
+- 엔티티와 API 스펙을 명확하게 구분
+- 엔티티가 변해도 API 스펙은 변하지 않음
+- 실무에서 엔티티를 API 스펙에 노출X
+
 # v1.09 1/5
 
 ### MVC
