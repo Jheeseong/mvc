@@ -58,6 +58,76 @@
 - 엔티티가 변해도 API 스펙은 변하지 않음
 - 실무에서 엔티티를 API 스펙에 노출X
 
+### 회원 수정 API
+- 변경 감지를 사용해서 데이터 수정
+
+      //회원 수정
+      @PutMapping("/api/v2/members/{id}")
+      public UpdateUser updateUserV2(@PathVariable("id") Long id,
+                                   @RequestBody @Valid UserDto dto){
+          userService.update(id, dto.getName());
+          User userFind = userService.findOne(id);
+          return new UpdateUser(userFind.getId(),userFind.getUsername());
+      }
+
+      @Data
+      @AllArgsConstructor
+      static class UpdateUser {
+          private Long id;
+          private String name;
+      }
+      
+      public class UserService {
+      ....
+      @Transactional
+      public void update(Long id, String name) {
+          User user = userRepository.findOne(id);
+          user.setUsername(name);
+      ....
+      }
+      
+### 회원 조회 API
+#### 응답 값으로 엔티티를 직접 외부에 노출
+
+    //회원 조회 - 엔티티 직접 조회
+    @GetMapping("/api/v1/members")
+    public List<User> UsersV1() {
+        return userService.findUsers();
+    }
+    
+- 엔티티에 프레젠테이션 계층을 위한 로칙이 추가
+- 엔티티의 모든 값이 노출
+- 응답 스펙을 맞추기 위해 로직이 추가(@JsonIgnore 등의 로직)
+- 엔티티가 변경되면 API 스펙이 변함
+- 추가로 컬렉션 직접 반환 시 API 스펙을 변경하기 힘듦
+-> 별도의 DTO를 반환
+
+#### 응답 값으로 엔티티가 아닌 별도의 DTO 사용
+    
+    //회원 조회 - DTO 조회
+    @GetMapping("/api/v2/members")
+    public Result UsersV2() {
+
+        List<User> findUsers = userService.findUsers();
+
+        List<UserDto> collect = findUsers.stream()
+                .map(u -> new UserDto(u.getUsername()))
+                .collect(Collectors.toList());
+
+        return new Result(collect);
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class Result<T> {  //바로 return 할 경우 JSON 배열 타입으로 반환되어 유연성 
+        private T data;
+    }
+    
+- 엔티티를 DTO로 변환하여 반환
+- 엔티티가 변해도 API 스펙 변경 X
+- result 클래스로 컬렉션을 감싸서 향후 필요한 필드 추가 가능
+
+### 결론 : 엔티티를 매핑하여 노출시키지말고 DTO로 변환 후 사용하자!!!!
 # v1.09 1/5
 
 ### MVC
@@ -169,7 +239,7 @@ DELETE | 삭제(delete) | /user/{1}
 
 @GetMapping 은 데이터를 가져올 떄 사용  
 @PostMapping 은 데이터를 보내줄 떄(게시,생성) 사용  
-@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 생신하는 HTTP 메서드)  
+@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 신하는 HTTP 메서드)  
 @PatchMapping 은 데이터 수정할 떄 사용(수정하는 영역만 갱신하는 HTTP 메서드)  
 
 
