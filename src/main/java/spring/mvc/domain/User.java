@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.aspectj.weaver.ast.Or;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
+    @NotEmpty
     private String username;
 
     @Embedded
