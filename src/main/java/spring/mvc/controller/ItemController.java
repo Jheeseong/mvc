@@ -28,12 +28,8 @@ public class ItemController {
     @PostMapping(value = "/items/new")
     public String create(TopForm form) {
 
-        Top top = new Top();
-        top.setName(form.getName());
-        top.setPrice(form.getPrice());
-        top.setStockQuantity(form.getStockQuantity());
-        top.setColor(form.getColor());
-        top.setSize(form.getSize());
+        Top top = Top.createTop(form.getName(), form.getPrice(),
+                form.getStockQuantity(), form.getSize(), form.getColor());
 
         itemService.saveItem(top);
         return "redirect:/items";

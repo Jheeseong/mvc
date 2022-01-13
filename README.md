@@ -1,5 +1,180 @@
 # mvc
 
+# v1.10 1/13
+## API 개발 기본
+### 회원 등록 API
+
+#### 엔티티를 RequestBody에 직접 매핑
+
+    @RestController // JSON으로 변환
+    @RequiredArgsConstructor
+    public class ApiMemberController {
+
+        private final UserService userService;
+
+        @PostMapping("/api/v1/members")
+        public UserResponse saveUserV1(@RequestBody @Valid User user) {
+        ...
+        return new UserResponse(id,name);
+        
+    @Data
+    static class UserResponse {
+        private Long id;
+        private String name;
+
+        public UserResponse(Long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+- @RestController : JSON으로 변환시켜주는 어노테이션
+- @RequsetBody : API통신을 통해 JSON으로 온 바디를 매핑
+- 만약 엔티티에 로직이 추가될 경우(API 검증 로직, @NotEmpty 등) 엔티티가 변하게 되고 API 스펙도 변함  
+-> API 요청 스펙에 맞춰 별도의 DTO를 파라미터로 받으며 해결!!
+
+####  DTO를 RequestBody에 매핑
+    
+    @PostMapping("/api/v2/members")
+    public UserResponse saveUserV2(@RequestBody @Valid UserDto dto) {
+
+        User user = new User();
+        user.setUsername(dto.getName());
+
+        Long id = userService.join(user);
+        String name = dto.getName();
+        return new UserResponse(id,name);
+    }
+
+    @Data
+    static class UserDto{
+        private Long id;
+        private String name;
+    }
+    
+- UserDto를 User엔티티 대신 RequestBody에 매핑
+- 엔티티와 프레젠테이션 계층을 위한 로직을 구분
+- 엔티티와 API 스펙을 명확하게 구분
+- 엔티티가 변해도 API 스펙은 변하지 않음
+- 실무에서 엔티티를 API 스펙에 노출X
+
+# v1.09 1/5
+
+### MVC
+
+MVC : Model,View,Controller로 구성된 디자인 패턴
+
+Controller   
+
+    @Controller
+    public class BasicController {
+    
+    @GetMapping("basic-mvc")
+    public String basicMvc(Model model) {
+    ...
+    }
+    return "basic-template";
+    
+View
+
+    <html xmlns:th="http://www.thymeleaf.org">
+    <body>
+    <p th:text="'hello ' + ${name}">hello! empty</p>
+    </body></html>
+    
+### API
+
+@ResponseBody 문자 반환
+
+@ResponseBody를 사용하면 viewResoler을 사용X  
+대신 HTTP의 BODY에 문자 내용을 직접 반환
+
+    @Controller
+    public class BasicController {
+     @GetMapping("basic-string")
+     @ResponseBody
+     public String basicString(@RequestParam("name") String name) {
+     return "hello " + name;
+       }
+     }
+     
+@ResponseBody 객체 반환
+
+@ResponseBody를 사용하고 객체가 반환되면 객체가 JSON으로 변환
+
+    @Controller
+    public class BasicController {
+     @GetMapping("basic-api")
+     @ResponseBody
+     public Basic basicApi(@RequestParam("name") String name) {
+     Basic basic = new Basic();
+     basic.setName(name);
+     return basic;
+     }
+     static class Basic {
+     private String name;
+     public String getName() {
+     return name;
+     }
+     public void setName(String name) {
+     this.name = name;
+       }
+     }
+    }
+    
+### 일반적 웹 애플리케이션 계층 구조
+
+![app계층](https://user-images.githubusercontent.com/96407257/148177104-10b9b9eb-534c-4b78-a755-43dfc98d0231.JPG)  
+
+컨트롤러 : 웹 MVC의 컨트롤러 역할  
+서비스 : 핵심 비지니스 로직 구현  
+리포지토리 :  데이터베이스에 접근, 도메인 객체를 DB에 저장하고 관리  
+도메인 : 비지니스 도메인 객체
+
+# v1.08 1/4
+
+http 관련 코드
+
+- Lombok의 Slf4j  
+Slf4j는 log를 사용할 수 있게 해주는 애노테이션  
+log는 system.out.println() 보다 IO리소스 사용이 적어 메모리 관리에 효율적  
+log.info를 통해 출력이 가능  
+    
+      @Slf4j
+      ...
+      log.info("home Controller");
+    
+- @valid  
+validation을 한 객체 내 @NotEmpty, NotNull 등을 체크하여 validation 한다.  
+
+      public String create(@Valid MemberForm form)
+
+- BindingResult
+@Valid 와 BindingResult가 있을 시 오류가 담겨 다음 코드를 진행해준다.
+
+      public String create(@Valid MemberForm form, BindingResult result) {
+          if (result.hasErrors()){
+              return "members/createMemberForm";
+          }
+          ...
+
+- http Mapping
+
+http Method | 동작 | URL 형태
+---- | ---- | ----
+GET | 조회(select * read) | /user/{id}
+POST | 생성(create) | /user
+PUT / PATCH | 수정(update) * create | /user
+DELETE | 삭제(delete) | /user/{1}
+
+@GetMapping 은 데이터를 가져올 떄 사용  
+@PostMapping 은 데이터를 보내줄 떄(게시,생성) 사용  
+@PutMapping 은 데이터 수정할 때 사용(데이터 전체를 생신하는 HTTP 메서드)  
+@PatchMapping 은 데이터 수정할 떄 사용(수정하는 영역만 갱신하는 HTTP 메서드)  
+
+
+
+
 # v1.07 1/3
 
 변경 감지와 병합(merge)
