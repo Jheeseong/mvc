@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import spring.mvc.domain.Address;
 import spring.mvc.domain.User;
 import spring.mvc.service.UserService;
 

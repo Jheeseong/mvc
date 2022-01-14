@@ -1,5 +1,6 @@
 package spring.mvc.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +25,7 @@ public class User {
     @Embedded
     private Address address;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Order> order = new ArrayList<>();
 
