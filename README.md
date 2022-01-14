@@ -1,5 +1,90 @@
 # mvc
 
+# v1.11 1/14
+## API 개발 고급
+### 지연로딩과 조회 성능 최적화
+- 지연로딩으로 인한 성능 문제를 단계적으로 해결해볼 계획
+#### V1 : 엔티티 직접 노출(xToOne 관계)
+
+    @RestController
+    @RequiredArgsConstructor
+    public class OrderApiController {
+
+    private final OrderRepository orderRepository;
+
+    //v1 : 엔티티 직접 노출
+    @GetMapping("/api/v1/simple-orders")
+    public List<Order> ordersV1() {
+        List<Order> all = orderRepository.findAll(new OrderSearch());
+        for (Order order : all) {
+            order.getUser().getUsername();
+            order.getDelivery().getAddress();
+            }
+        return all;
+        }
+    }
+
+- 문제점
+  - 엔티티 직접 노출 
+  - Jackson의 프록시 객체 인식 문제 : 모든 것이 **LAZY를 통한 지연로딩 설정**이 되어 있어 order에 있는 user과 address는 **프록시 객체** (프록시 객체 초기화가 이루어지지 않기 떄문)  
+  이러한 상황에서 JSON이 되는 과정에서 프록시 객체를 인식하지 못해 **예외 발생& 무한루프 발생**
+  - 지연 로딩(LAZY)를 피하기위해 즉시 로딩(EARGR)으로 설정 X, 항상 지연 로딩을 기본으로 하고, 성능 최적화 필요 시 **조인 패치(join fetch)** 를 사용!!
+
+- 해결 방법
+  - Hibernate5Module + @JsonIgnore 사용 : **초기화된 프록시 객체만 노출**되어 무한루프 해결
+        
+        @SpringBootApplication
+        public class MvcApplication {
+
+             public static void main(String[] args) {
+             SpringApplication.run(MvcApplication.class, args);
+	         }
+
+	         @Bean
+             Hibernate5Module hibernate5Module() {
+	         return new Hibernate5Module();
+             }
+        }
+        
+  - **DTO** 사용 -> 가장 좋은 방법
+
+#### V2 : DTO 사용
+
+    //DTO 사용//
+    @GetMapping("/api/v2/simple-orders")
+    public List<SimpleOrderDto> ordersV2() {
+        List<Order> orders = orderRepository.findAll(new OrderSearch());
+        List<SimpleOrderDto> result = orders.stream()
+                .map(o -> new SimpleOrderDto(o))
+                .collect(Collectors.toList());
+
+        return result;
+    }
+
+    @Data
+    static class SimpleOrderDto {
+
+        private Long orderId;
+        private String name;
+        private LocalDateTime orderDate; 
+        private OrderStatus orderStatus;
+        private Address address;
+
+        public SimpleOrderDto(Order order) {
+            orderId = order.getId();
+            name = order.getUser().getUsername(); //LAZY 초기화
+            orderDate = order.getOrderDate();
+            orderStatus = order.getStatus();
+            address = order.getDelivery().getAddress(); //LAZY 초기화
+        }
+    }
+    
+- 문제점
+  - 1+N+M 문제 발생 : order(조회 1번) -> user(지연 로딩 조회 N번) -> delivery(지연 로딩 조회 N번) 순으로 **쿼리가 총 1 + N + M 번 실행** , 이미 조회된 경우 영속성 컨텍스트에서 조회하여 쿼리를 생략 
+
+- 해결 방법
+  - **join fetch 를 사용**하여 1 + N + M 문제를 해결!!
+
 # v1.10 1/13
 ## API 개발 기본
 ### 회원 등록 API
