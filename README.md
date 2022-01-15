@@ -85,6 +85,93 @@
 - 해결 방법
   - **join fetch 를 사용**하여 1 + N + M 문제를 해결!!
 
+#### V3 : DTO 변환 후 join fetch 사용
+
+    //3. join fetch 사용//
+    @GetMapping("/api/v3/simple-orders")
+    public List<SimpleOrderDto> orderV3() {
+
+        List<Order> orders = orderRepository.findUserDelivery();
+        List<SimpleOrderDto> result = orders.stream()
+                .map(o -> new SimpleOrderDto(o))
+                .collect(Collectors.toList());
+
+        return result;
+    }
+    
+    public class OrderRepository {
+    ....
+        public List<Order> findUserDelivery() { //쿼리 작성 후 join fetch
+            return em.createQuery("select o from Order o" +
+                    " join fetch o.user u" +
+                    " join fetch o.delivery d", Order.class)
+                    .getResultList();
+        }
+    }
+    
+- 문제점 : 해당 엔티티의 모든 column을 가져와 성는 저하의 문제 발생(성능 차이는 미비)  
+![image](https://user-images.githubusercontent.com/96407257/149612418-a19a4874-e4b8-4d6f-b886-09d0544d95dd.png)
+
+- 해경방법 : JPQL을 직접 받는 DTO 설정(효과는 미비), **DTO + fetch join은 대부분 최적화 문제 해결**, JPQL에 직접 DTO 설정하는 것은 **선택적으로 설정**
+    
+#### V4 : JPA로 DTO 설정
+
+    //4. JPA를 사용한 DTO
+    //(API 로직)
+    @GetMapping("/api/v4/simple-orders")
+    public List<OrderQueryDto> ordersV4() {
+        return orderJpaRepository.findQueryDto();
+    }
+
+- JPQL에 DTO를 직접 설정해서 원하는 필드만 받게 설정
+
+      //(JPQL - Repository)
+      @Repository
+      @RequiredArgsConstructor
+      public class OrderJpaRepository {
+
+          private final EntityManager em;
+
+          public List<OrderQueryDto> findQueryDto() {
+              return em.createQuery(
+                  "select new spring.mvc.repository.api.OrderQueryDto(o.id, m.username, o.orderDate, o.status, d.address)" +
+                        " from Order o" +
+                        " join o.user m" +
+                        " join o.delivery d", OrderQueryDto.class)
+                .getResultList();
+           }
+      }
+   
+- JPQL에 new 패키지 명.dto 를 통해서 JPQL의 결과를 DTO로 즉시 변환, 리포지토리 재사용성 떨어짐
+    
+      //(DTO)
+      @Data
+      public class OrderQueryDto {
+         private Long orderId;
+         private String name;
+         private LocalDateTime orderDate;
+         private OrderStatus orderStatus;
+         private Address address;
+
+         public OrderQueryDto(Long orderId, String name, LocalDateTime orderDate, OrderStatus orderStatus, Address address) {
+             this.orderId = orderId;
+             this.name = name;
+             this.orderDate = orderDate;
+             this.orderStatus = orderStatus;
+             this.address = address;
+          }
+      }
+    
+- 생성자에 객체가 아닌 필드를 직접 받아서 매핑
+
+- 결론 
+  - 엔티티를 DTO로 변환시 Repository 재사용성도 좋고 개발도 단순  
+  - DTO로 바로 조회 시 성능이 좋아짐(효과는 미비)
+
+- 쿼리 방식 선택 권장 순서
+  - 우선 엔티티를 DTO로 변환 -> 필요 시 join fetch로 성능 최적화(대부분 분제 해결) -> 추가 필요 시 DTO로 직접 조회 방법 선택 -> 최후의 방법으로 JPA가 제공하는 네이티브SQL 혹은 스프링 JDBC Template을 사용하여 SQL 직접 사용
+	 
+
 # v1.10 1/13
 ## API 개발 기본
 ### 회원 등록 API
