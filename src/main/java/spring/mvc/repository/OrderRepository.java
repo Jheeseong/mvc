@@ -15,6 +15,7 @@ import java.util.List;
 public class OrderRepository {
     private final EntityManager em;
 
+
     public void save(Order order) {
         em.persist(order);
     }
@@ -57,4 +58,10 @@ public class OrderRepository {
         return query.getResultList();
         }
 
+    public List<Order> findUserDelivery() {
+        return em.createQuery("select o from Order o" +
+                " join fetch o.user u" +
+                " join fetch o.delivery d", Order.class)
+                .getResultList();
+    }
 }

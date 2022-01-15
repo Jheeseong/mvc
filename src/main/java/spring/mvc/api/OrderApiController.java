@@ -2,11 +2,15 @@ package spring.mvc.api;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import spring.mvc.domain.*;
 import spring.mvc.repository.OrderRepository;
+import spring.mvc.repository.api.OrderJpaRepository;
+import spring.mvc.repository.api.OrderQueryDto;
 
+import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +20,7 @@ import java.util.stream.Collectors;
 public class OrderApiController {
 
     private final OrderRepository orderRepository;
+    private final OrderJpaRepository orderJpaRepository;
 
     //v1 : 엔티티 직접 노출//
     @GetMapping("/api/v1/simple-orders")
@@ -28,7 +33,7 @@ public class OrderApiController {
         return all;
     }
 
-    //DTO 사용//
+    //2. DTO 사용//
     @GetMapping("/api/v2/simple-orders")
     public List<SimpleOrderDto> ordersV2() {
         List<Order> orders = orderRepository.findAll(new OrderSearch());
@@ -55,5 +60,21 @@ public class OrderApiController {
             orderStatus = order.getStatus();
             address = order.getDelivery().getAddress();
         }
+    }
+    //3. join fetch 사용
+    @GetMapping("/api/v3/simple-orders")
+    public List<SimpleOrderDto> orderV3() {
+
+        List<Order> orders = orderRepository.findUserDelivery();
+        List<SimpleOrderDto> result = orders.stream()
+                .map(o -> new SimpleOrderDto(o))
+                .collect(Collectors.toList());
+
+        return result;
+    }
+    //4. JPA를 사용한 DTO
+    @GetMapping("/api/v4/simple-orders")
+    public List<OrderQueryDto> ordersV4() {
+        return orderJpaRepository.findQueryDto();
     }
 }
