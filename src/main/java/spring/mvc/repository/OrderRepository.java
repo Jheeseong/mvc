@@ -64,4 +64,14 @@ public class OrderRepository {
                 " join fetch o.delivery d", Order.class)
                 .getResultList();
     }
+
+    public List<Order> findAllOrderItem() {
+        return em.createQuery(
+                "select o from Order o" +
+                        " join fetch o.user u" +
+                        " join fetch o.delivery d" +
+                        " join fetch o.orderItemList oi" +
+                        " join fetch oi.item i", Order.class)
+                .getResultList();
+    }
 }
