@@ -1,6 +1,126 @@
 # mvc
 
-# v1.11 1/14
+# v1.12 1/16
+## API 개발 고급
+### API 개발 고급 - 컬렉션 조회
+#### 엔티티 직접 노출
+
+    @RestController
+    @RequiredArgsConstructor
+    public class OrderCollectionController {
+
+       private final OrderRepository orderRepository;
+
+       //1. 엔티티 노출//
+       @GetMapping("/api/v1/orders")
+       public List<Order> OrderV1() {
+           List<Order> all = orderRepository.findAll(new OrderSearch());
+             for (Order order : all) {
+                 order.getUser().getUsername();
+                 order.getDelivery().getAddress();
+                 List<OrderItem> orderItemList = order.getOrderItemList();
+                 orderItemList.stream().forEach(o -> o.getItem().getName());
+             }
+             return all;
+       }
+   }
+
+- 문제점
+  - 엔티티  노출 시 AIP 스펙 변화
+  - 트랜젝션 안에서 지연 로딩 필요
+  - 양방향 연관관계 문제(JsonIgnore)
+
+#### 엔티티를 DTO로 변환
+
+    //2. DTO 변환//
+    //(API 로직)
+    @GetMapping("/api/v2/orders")
+    public List<OrderDto> OrdersV2() {
+        List<Order> orders = orderRepository.findAll(new OrderSearch());
+        List<OrderDto> result = orders.stream()
+                .map(order -> new OrderDto(order))
+                .collect(toList());
+
+        return result;
+    }
+
+    //(DTO)
+    @Data
+    static class OrderDto {
+        private Long orderId;
+        private String name;
+        private LocalDateTime orderDate;
+        private OrderStatus orderStatus;
+        private Address address;
+        private List<OrderItemDto> orderItems;
+
+        public OrderDto(Order order) {
+            orderId = order.getId();
+            name = order.getUser().getUsername();
+            orderDate = order.getOrderDate();
+            orderStatus = order.getStatus();
+            address = order.getDelivery().getAddress();
+            orderItems = order.getOrderItemList().stream()
+                    .map(orderItem -> new OrderItemDto(orderItem))
+                    .collect(toList());
+        }
+    }
+
+    //(DTO)
+    @Data
+    static class OrderItemDto {
+
+        private String itemName;
+        private int orderPrice;
+        private int count;
+
+        public OrderItemDto(OrderItem orderItem) {
+            itemName = orderItem.getItem().getName();
+            orderPrice = orderItem.getOrderPrice();
+            count = orderItem.getCount();
+        }
+    }
+    
+- 문제점
+  -  1+N+M 문제 발생 : order(조회 1번) -> user,addres(지연 로딩 조회 N번) -> orderItem(지연 로딩 조회 N번) -> item(지연 로딩 조회 N번) 순으로 **쿼리가 총 1 + N + M + P 번 실행** , 이미 조회된 경우 영속성 컨텍스트에서 조회하여 쿼리를 생략 
+
+- 해결 방법
+  - **join fetch 를 사용**하여 1 + N + M 문제를 해결!!
+
+#### 엔티티를 DTO 변환 - 페이징과 한계 돌파
+- 컬렉션을 조인 패치 시 페이징이 불가능
+  - 컬렉션을 조인 패치 하면 일대다 조인이 발생하여 데이터가 증가
+  - 일대다에서 1을 기준으로 페이징 하는 것이 목적 but 데이터는 다(N)를 기준으로 row 생성
+  - order 기준으로 페이징하려고 하였으나, 다(N)인 orderitem을 조인하면 orderitem이 기준이 됨
+
+- 한계 돌파
+  - ToOne관계를 모두 조인 패치 -> row수를 증가시키지 않음(페이징 영향X)
+  - 컬렉션은 지연 로딩
+  - hibernate.default_batch_fetch_size 글로벌 설정  
+
+        //3.1 DTO 변환 - join fetch//
+        @GetMapping("/api/v3.1/orders")
+        public List<OrderDto> OrderV3_page(
+              @RequestParam(value = "offset", defaultValue = "0") int offset,
+              @RequestParam(value = "limit", defaultValue = "100") int limit) {
+           List<Order> orders = orderRepository.findUserDelivery();
+           List<OrderDto> result = orders.stream()
+                  .map(order -> new OrderDto(order))
+                  .collect(toList());
+           return result;
+        }
+      
+- 장점
+  - 쿼리 호출 수가 1 + N 에서 1 + 1 로 최적화
+  - 조인보다 DB 데이터 전솔량이 최적화
+  - 조인 패치 방식과 비교해서 쿼리 호출 수는 약간 증가하지만 DB 데이터 전송량 감소
+  - 컬렉션 조인 패치 는 페이징 불가하지만 이 방법은 페이징 가능      
+      
+- 결론
+  - ToOne 관계는 조인 패치하여도 페이징에 영향 X
+  - ToOne 관계는 조인 패치로 쿼리 수를 줄이고 나머지는 fetch_size 설정으로 최적화
+
+# v1.11 1/14,1/15
 ## API 개발 고급
 ### 지연로딩과 조회 성능 최적화
 - 지연로딩으로 인한 성능 문제를 단계적으로 해결해볼 계획
@@ -170,7 +290,6 @@
 
 - 쿼리 방식 선택 권장 순서
   - 우선 엔티티를 DTO로 변환 -> 필요 시 join fetch로 성능 최적화(대부분 분제 해결) -> 추가 필요 시 DTO로 직접 조회 방법 선택 -> 최후의 방법으로 JPA가 제공하는 네이티브SQL 혹은 스프링 JDBC Template을 사용하여 SQL 직접 사용
-	 
 
 # v1.10 1/13
 ## API 개발 기본
