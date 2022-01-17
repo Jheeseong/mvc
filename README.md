@@ -271,6 +271,7 @@
     }
 	
 **flat DTO 추가**
+
     @Data
     public class OrderFlatDto {
 
@@ -294,6 +295,25 @@
         this.count = count;
         }
     }
+    
+**OrderCollectionRepository 쿼리 추가**
+
+    public List<OrderFlatDto> findAllByDto_flat() {
+        return em. createQuery("select new spring.mvc.repository.api.OrderFlatDto(o.id, m.username, o.orderDate, o.status, d.address, i.name, oi.orderPrice, oi.count)" +
+                        " from Order o" +
+                        " join o.user m" +
+                        " join o.delivery d" +
+                        " join o.orderItems oi" +
+                        " join oi.item i", OrderFlatDto.class)
+                .getResultList();
+    }
+    
+- 쿼리 1번
+- 단점
+  - 쿼리는 한번이지만 조인으로 인해 DB에서 애플리케이션으로 전달하는 중복 데이터가 추가되어 상황에 따라 더 느릴 수 있음
+  - 애플리케이션 추가 작업이 큼
+  - 페이징 불가능
+
 # v1.11 1/14,1/15
 ## API 개발 고급
 ### 지연로딩과 조회 성능 최적화
