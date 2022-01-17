@@ -1,6 +1,6 @@
-# mvc
+# mvc 
 
-# v1.12 1/16
+# v1.12 1/16 1/17
 ## API 개발 고급
 ### API 개발 고급 - 컬렉션 조회
 #### 엔티티 직접 노출
@@ -119,6 +119,88 @@
 - 결론
   - ToOne 관계는 조인 패치하여도 페이징에 영향 X
   - ToOne 관계는 조인 패치로 쿼리 수를 줄이고 나머지는 fetch_size 설정으로 최적화
+
+#### JPA에서 DTO 직접 조회
+
+    //4. JPA에서 DTO 조회
+    (API 로직)
+    @GetMapping("/api/v4/orders")
+    public List<OrderListQueryDto> OrderV4() {
+        List<OrderListQueryDto> result = orderCollectionRepository.findOrderQueryDtos();
+        return result;
+    }
+    
+**OrderCollectionRepository에 쿼리 추가**
+
+    public List<OrderListQueryDto> findOrderQueryDtos() {
+        List<OrderListQueryDto> result = findOrders();
+        result.forEach(o ->{
+            List<OrderItemQueryDto> orderItems = findOrderItems(o.getOrderId());
+            o.setOrderItems(orderItems);
+        });
+        return result;
+    }
+    
+**findOrders - ToOne 관계 조회**
+
+    private List<OrderListQueryDto> findOrders() {
+        return em.createQuery("select new spring.mvc.repository.api.OrderListQueryDto(o.id, m.username, o.orderDate, o.status, d.address)" +
+                " from Order o" +
+                " join o.user m" +
+                " join o.delivery d",OrderListQueryDto.class)
+                .getResultList();
+    }
+    
+**findOrderItems - ToMany 관계 조회**
+
+    private List<OrderItemQueryDto> findOrderItems(Long orderId) {
+        return em. createQuery("select new spring.mvc.repository.api.OrderItemQueryDto(oi.order.id, i.name, oi.orderPrice, oi.count)" +
+                " from OrderItem oi" +
+                " join oi.item i" +
+                " where oi.order.id = :orderId", OrderItemQueryDto.class)
+                .setParameter("orderId", orderId)
+                .getResultList();
+    }
+    
+**Order DTO 추가**
+
+    @Data
+    public class OrderListQueryDto {
+
+    private Long orderId;
+    private String name;
+    private LocalDateTime orderDate;
+    private OrderStatus orderStatus;
+    private Address address;
+    private List<OrderItemQueryDto> orderItems;
+
+    public OrderListQueryDto(Long orderId, String name, LocalDateTime orderDate, OrderStatus orderStatus, Address address) {
+        this.orderId = orderId;
+        this.name = name;
+        this.orderDate = orderDate;
+        this.orderStatus = orderStatus;
+        this.address = address;
+	}
+    }
+    
+**OrderItem Dto 추가**
+
+    @Data
+    public class OrderItemQueryDto {
+
+    @JsonIgnore
+    private Long orderId;
+    private String itemName;
+    private int OrderPrice;
+    private int count;
+
+    public OrderItemQueryDto(Long orderId, String itemName, int orderPrice, int count) {
+        this.orderId = orderId;
+        this.itemName = itemName;
+        this.OrderPrice = orderPrice;
+        this.count = count;
+        }
+    }
 
 # v1.11 1/14,1/15
 ## API 개발 고급
