@@ -77,6 +77,12 @@ public class OrderCollectionController {
         return result;
     }
 
+    //5. JPA에서 DTO 조회 - 컬렉션 조회 최적화
+    @GetMapping("/api/v5/orders")
+    public List<OrderListQueryDto> OrderV5() {
+        List<OrderListQueryDto> result = orderCollectionRepository.findAllByDto_optimization();
+        return result;
+    }
     @Data
     static class OrderDto {
         private Long orderId;
