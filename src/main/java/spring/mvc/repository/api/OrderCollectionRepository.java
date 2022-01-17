@@ -2,6 +2,7 @@ package spring.mvc.repository.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import spring.mvc.api.OrderFlatDto;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -62,4 +63,13 @@ public class OrderCollectionRepository {
                 .getResultList();
     }
 
+    public List<OrderFlatDto> findAllByDto_flat() {
+        return em. createQuery("select new spring.mvc.repository.api.OrderFlatDto(o.id, m.username, o.orderDate, o.status, d.address, i.name, oi.orderPrice, oi.count)" +
+                        " from Order o" +
+                        " join o.user m" +
+                        " join o.delivery d" +
+                        " join o.orderItems oi" +
+                        " join oi.item i", OrderFlatDto.class)
+                .getResultList();
+    }
 }

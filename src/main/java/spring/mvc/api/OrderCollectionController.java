@@ -8,14 +8,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import spring.mvc.domain.*;
 import spring.mvc.repository.OrderRepository;
-import spring.mvc.repository.api.OrderCollectionRepository;
-import spring.mvc.repository.api.OrderJpaRepository;
-import spring.mvc.repository.api.OrderListQueryDto;
+import spring.mvc.repository.api.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -82,6 +80,20 @@ public class OrderCollectionController {
     public List<OrderListQueryDto> OrderV5() {
         List<OrderListQueryDto> result = orderCollectionRepository.findAllByDto_optimization();
         return result;
+    }
+
+    //6. JPA에서 DTO 조회 - 플랫 데이터 최적화
+    @GetMapping("/api/v6/orders")
+    public List<OrderListQueryDto> OrderV6() {
+        List<OrderFlatDto> flats = orderCollectionRepository.findAllByDto_flat();
+        return flats.stream()
+                .collect(groupingBy(o -> new OrderListQueryDto(o.getOrderId(), o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
+                        mapping(o -> new OrderItemQueryDto(o.getOrderId(),
+                                o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
+                )).entrySet().stream()
+                .map(e -> new OrderListQueryDto(e.getKey().getOrderId(),
+                        e.getKey().getName(), e.getKey().getOrderDate(), e.getKey().getOrderStatus(),e.getKey().getAddress(), e.getValue()))
+                .collect(toList());
     }
     @Data
     static class OrderDto {
