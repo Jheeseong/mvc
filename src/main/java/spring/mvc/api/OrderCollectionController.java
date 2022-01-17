@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import spring.mvc.domain.*;
 import spring.mvc.repository.OrderRepository;
+import spring.mvc.repository.api.OrderCollectionRepository;
+import spring.mvc.repository.api.OrderJpaRepository;
+import spring.mvc.repository.api.OrderListQueryDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 public class OrderCollectionController {
 
     private final OrderRepository orderRepository;
+    private final OrderCollectionRepository orderCollectionRepository;
 
     //1. 엔티티 노출//
     @GetMapping("/api/v1/orders")
@@ -63,6 +67,13 @@ public class OrderCollectionController {
         List<OrderDto> result = orders.stream()
                 .map(order -> new OrderDto(order))
                 .collect(toList());
+        return result;
+    }
+
+    //4. JPA에서 DTO 조회
+    @GetMapping("/api/v4/orders")
+    public List<OrderListQueryDto> OrderV4() {
+        List<OrderListQueryDto> result = orderCollectionRepository.findOrderQueryDtos();
         return result;
     }
 
