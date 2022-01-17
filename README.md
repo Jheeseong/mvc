@@ -251,6 +251,49 @@
 - ToOne 쿼리 1번, ToMany 쿼리 1번
 - ToOne 관계 먼저 조회 후 얻은 OrderId로 ToMany 관계인 OrderItem을 한번에 조회
 - Map을 사용하여 매칭 
+
+#### 6. JPA에서 DTO 조회 - 플렛 데이터 최적화
+
+**API 로직 추가**
+
+    //6. JPA에서 DTO 조회 - 플랫 데이터 최적화
+    @GetMapping("/api/v6/orders")
+    public List<OrderListQueryDto> OrderV6() {
+        List<OrderFlatDto> flats = orderCollectionRepository.findAllByDto_flat();
+        return flats.stream()
+                .collect(groupingBy(o -> new OrderListQueryDto(o.getOrderId(), o.getName(), o.getOrderDate(), o.getOrderStatus(), o.getAddress()),
+                        mapping(o -> new OrderItemQueryDto(o.getOrderId(),
+                                o.getItemName(), o.getOrderPrice(), o.getCount()), toList())
+                )).entrySet().stream()
+                .map(e -> new OrderListQueryDto(e.getKey().getOrderId(),
+                        e.getKey().getName(), e.getKey().getOrderDate(), e.getKey().getOrderStatus(),e.getKey().getAddress(), e.getValue()))
+                .collect(toList());
+    }
+	
+**flat DTO 추가**
+    @Data
+    public class OrderFlatDto {
+
+    private Long orderId;
+    private String name;
+    private LocalDateTime orderDate; //주문시간
+    private Address address;
+    private OrderStatus orderStatus;
+    private String itemName;//상품 명
+    private int orderPrice; //주문 가격
+    private int count;
+
+    public OrderFlatDto(Long orderId, String name, LocalDateTime orderDate, Address address, OrderStatus orderStatus, String itemName, int orderPrice, int count) {
+        this.orderId = orderId;
+        this.name = name;
+        this.orderDate = orderDate;
+        this.address = address;
+        this.orderStatus = orderStatus;
+        this.itemName = itemName;
+        this.orderPrice = orderPrice;
+        this.count = count;
+        }
+    }
 # v1.11 1/14,1/15
 ## API 개발 고급
 ### 지연로딩과 조회 성능 최적화
