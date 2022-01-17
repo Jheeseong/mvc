@@ -201,7 +201,56 @@
         this.count = count;
         }
     }
+- 문제점
+  - ToOne 쿼리 1번, ToMany 뭐리 N번 실행
+  - ToOne 관게 조회 후 ToMany 관계는 각각 별도로 처리함
+    - ToOne 관계는 데이터 row 수 증가 X
+    - ToMany 관계는 조인하면 데이터 row 수 증가
+  - ToOne 관계는 조인으로 최적화가 쉬워 한번에 조회하고. ToMany 관계는 최적화가 어려워 별도의 메서드를 통해 조회
+- 해결 방법
+  - 컬렉션 조회 최적화를 위해 한꺼번에 조회 방법을 찾아볼 계획
 
+#### 5. JPA에서 DTO 조회 - 컬렉션 조회 최적화
+
+**API 로직 추가**
+
+    //5. JPA에서 DTO 조회 - 컬렉션 조회 최적화
+    @GetMapping("/api/v5/orders")
+    public List<OrderListQueryDto> OrderV5() {
+        List<OrderListQueryDto> result = orderCollectionRepository.findAllByDto_optimization();
+        return result;
+    }
+	
+**OrderCollectionRepository 쿼리 추가**
+
+    public List<OrderListQueryDto> findAllByDto_optimization() {
+    	//ToOne 관계 조회//
+        List<OrderListQueryDto> result = findOrders();
+	
+	//ToMany 관계 조회//
+        List<Long> orderIds = result.stream()
+                .map(o -> o.getOrderId())
+                .collect(Collectors.toList());
+
+        List<OrderItemQueryDto> orderItems = em.createQuery(
+                        "select new spring.mvc.repository.api.OrderItemQueryDto(oi.order.id, i.name, oi.orderPrice, oi.count)" +
+                                " from OrderItem oi" +
+                                " join oi.item i" +
+                                " where oi.order.id in :orderIds", OrderItemQueryDto.class)
+                .setParameter("orderIds", orderIds)
+                .getResultList();
+
+        Map<Long, List<OrderItemQueryDto>> orderItemMap = orderItems.stream()
+                        .collect(Collectors.groupingBy(orderItemQueryDto -> orderItemQueryDto.getOrderId()));
+
+        result.forEach(o -> o.setOrderItems(orderItemMap.get(o.getOrderId())));
+
+        return result;
+    }
+
+- ToOne 쿼리 1번, ToMany 쿼리 1번
+- ToOne 관계 먼저 조회 후 얻은 OrderId로 ToMany 관계인 OrderItem을 한번에 조회
+- Map을 사용하여 매칭 
 # v1.11 1/14,1/15
 ## API 개발 고급
 ### 지연로딩과 조회 성능 최적화
